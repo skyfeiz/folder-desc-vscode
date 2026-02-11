@@ -38,7 +38,7 @@
         "properties": {
           "folder-desc.desc": {
             "type": "boolean",
-            "default": "false"
+            "default": false
           }
         }
       }
