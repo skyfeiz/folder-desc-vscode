@@ -2,7 +2,7 @@
   "publisher": "skyfeiz",
   "name": "folder-desc",
   "displayName": "folder-desc",
-  "version": "0.0.1",
+  "version": "0.0.1-alpha.2",
   "packageManager": "pnpm@10.4.1",
   "description": "",
   "author": "skyfeiz <webyicunhui@outlook.com>",
