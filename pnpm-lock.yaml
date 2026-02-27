@@ -26,6 +26,9 @@ importers:
       bumpp:
         specifier: ^10.0.3
         version: 10.4.1
+      destr:
+        specifier: ^2.0.5
+        version: 2.0.5
       eslint:
         specifier: ^9.20.1
         version: 9.39.2(jiti@2.6.1)
