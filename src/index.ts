@@ -5,6 +5,9 @@ import { defineExtension, useEventEmitter } from 'reactive-vscode';
 import { commands, FileDecoration, window as vscodeWindow, workspace } from 'vscode';
 import { getMatchedPath, readConfig, writeConfig } from './utils';
 
+// @ts-expect-error - support badge length greater than 2 characters
+FileDecoration.validate = (): void => {};
+
 let allDecs: DescData = {};
 const changeEmitter = useEventEmitter<undefined | Uri | Uri[]>([]);
 
@@ -16,10 +19,10 @@ const { activate, deactivate } = defineExtension(async (context) => {
     onDidChangeFileDecorations: changeEmitter.event,
     provideFileDecoration: (uri) => {
       const json = allDecs[uri.path];
+
       if (json) {
         return new FileDecoration(json.description, json.tooltip || '');
       }
-      return undefined;
     },
   });
 
