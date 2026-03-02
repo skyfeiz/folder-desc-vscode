@@ -5,6 +5,28 @@
 
 Add description to the folder or file in VSCode.
 
+## Features
+
+- Add description to the folder or file in VSCode.
+- config file is `.vscode/folder-desc.json`.
+- find the nearest `package.json` directory or the root directory, then find the `.vscode/folder-desc.json` file in this directory, if the file does not exist, will create a new folder `.vscode` and a new file `folder-desc.json`.
+- not support to add tooltip to the folder or file, but you can write the tooltip in the config file.
+
+## config file demo
+
+```json
+// .vscode/folder-desc.json
+{
+  "/Users/jayz/Documents/test/aaa": {
+    "description": "aaa"
+  },
+  "/Users/jayz/Documents/test/aaa/index.ts": {
+    "description": "aaa-index.ts",
+    "tooltip": "tooltip-index.ts"
+  }
+}
+```
+
 ## Configurations
 
 ## Commands

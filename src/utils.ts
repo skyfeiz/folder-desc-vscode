@@ -49,7 +49,7 @@ export function readConfig(filePath: string): DescData {
 }
 
 export function writeConfig(matchedPath: string, path: string, desc: string) {
-  const filePath = join(matchedPath, '.vscode', 'folder-desc.json');
+  const filePath = join(matchedPath, '.vscode/folder-desc.json');
 
   if (!checkDotVsCodeExists(matchedPath)) {
     fs.mkdirSync(join(matchedPath, '.vscode'));

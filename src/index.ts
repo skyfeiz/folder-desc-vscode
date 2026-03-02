@@ -2,7 +2,7 @@ import type { Uri } from 'vscode';
 import type { DescData } from './type';
 import fg from 'fast-glob';
 import { defineExtension, useEventEmitter } from 'reactive-vscode';
-import { commands, FileDecoration, window as vscodeWindow, workspace } from 'vscode';
+import { commands, FileDecoration, Uri as vscodeUri, window as vscodeWindow, workspace } from 'vscode';
 import { getMatchedPath, readConfig, writeConfig } from './utils';
 
 // @ts-expect-error - support badge length greater than 2 characters
@@ -15,7 +15,7 @@ const { activate, deactivate } = defineExtension(async (context) => {
   // read all config
   allDecs = await readAllDecs();
 
-  vscodeWindow.registerFileDecorationProvider({
+  const decorationProvider = vscodeWindow.registerFileDecorationProvider({
     onDidChangeFileDecorations: changeEmitter.event,
     provideFileDecoration: (uri) => {
       const json = allDecs[uri.path];
@@ -26,9 +26,24 @@ const { activate, deactivate } = defineExtension(async (context) => {
     },
   });
 
+  // init watcher
+  const watcher = workspace.createFileSystemWatcher('**/.vscode/folder-desc.json');
+  watcher.onDidChange(async (uri) => {
+    const config = readConfig(uri.path);
+
+    allDecs = { ...allDecs, ...config };
+
+    for (const url in config) {
+      const u = vscodeUri.file(url);
+      changeEmitter.fire(u);
+    }
+  });
+
   // register command
   const disposable = commands.registerCommand('folder-desc.addDesc', actionAddDesc);
 
+  context.subscriptions.push(watcher);
+  context.subscriptions.push(decorationProvider);
   context.subscriptions.push(disposable);
 });
 
@@ -42,10 +57,7 @@ async function actionAddDesc(uri: Uri) {
     return;
   }
 
-  const desc = await vscodeWindow.showInputBox({
-    prompt: 'Please enter the description',
-    value: '',
-  });
+  const desc = await vscodeWindow.showInputBox({ prompt: 'Please enter the description', value: '' });
 
   writeConfig(matchedPath, uri.path, desc || '');
 
@@ -64,9 +76,7 @@ async function readAllDecs() {
     return {};
 
   const allConfigFiles: string[] = await Promise.all(rootUris.map(async (rootUri) => {
-    return fg(`${rootUri}/**/.vscode/folder-desc.json`, {
-      onlyFiles: true,
-    });
+    return fg(`${rootUri}/**/.vscode/folder-desc.json`, { onlyFiles: true });
   })).then(files => files.flat());
 
   const allConfigs: DescData = allConfigFiles.reduce((acc, filePath) => {
