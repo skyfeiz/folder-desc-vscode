@@ -14,8 +14,9 @@ Add description to the folder or file in VSCode.
 
 ## config file demo
 
+> .vscode/folder-desc.json
+
 ```json
-// .vscode/folder-desc.json
 {
   "aaa": {
     "description": "aaa"
@@ -27,7 +28,9 @@ Add description to the folder or file in VSCode.
 }
 ```
 
-## Configurations
+- Based on the above configuration, `aaa` and `.vscode` are in the same directory.
+- When reading the configuration file, the relative paths specified in the configuration file will be converted to globally unique absolute paths.
+- unique identifier is the global unique absolute path.
 
 ## Commands
 
