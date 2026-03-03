@@ -45,14 +45,15 @@ export function readConfig(filePath: string): DescData {
   if (!checkFileExists(filePath)) {
     return {};
   }
-  return destr(fs.readFileSync(filePath, 'utf-8'));
+
+  return destr(fs.readFileSync(filePath, 'utf-8')); ;
 }
 
-export function writeConfig(matchedPath: string, path: string, desc: string) {
-  const filePath = join(matchedPath, '.vscode/folder-desc.json');
+export function writeConfig(matchedRootPath: string, path: string, desc: string) {
+  const filePath = join(matchedRootPath, '.vscode/folder-desc.json');
 
-  if (!checkDotVsCodeExists(matchedPath)) {
-    fs.mkdirSync(join(matchedPath, '.vscode'));
+  if (!checkDotVsCodeExists(matchedRootPath)) {
+    fs.mkdirSync(join(matchedRootPath, '.vscode'));
   }
 
   let descData: DescData = {};
@@ -60,7 +61,21 @@ export function writeConfig(matchedPath: string, path: string, desc: string) {
     descData = readConfig(filePath);
   }
 
+  path = path.replace(matchedRootPath, '').slice(1);
+
   descData[path] = { description: desc };
 
   fs.writeFileSync(filePath, JSON.stringify(descData, null, 2));
+}
+
+/**
+ * transform the config to the absolute path
+ * `allDecs` is a object, key is the absolute path
+ */
+export function transformerConfig(filePath: string, config: DescData) {
+  const newConfig: DescData = {};
+  for (const key in config) {
+    newConfig[join(filePath, '../../', key)] = config[key];
+  }
+  return newConfig;
 }

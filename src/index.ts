@@ -3,7 +3,7 @@ import type { DescData } from './type';
 import fg from 'fast-glob';
 import { defineExtension, useEventEmitter } from 'reactive-vscode';
 import { commands, FileDecoration, Uri as vscodeUri, window as vscodeWindow, workspace } from 'vscode';
-import { getMatchedPath, readConfig, writeConfig } from './utils';
+import { getMatchedPath, readConfig, transformerConfig, writeConfig } from './utils';
 
 // @ts-expect-error - support badge length greater than 2 characters
 FileDecoration.validate = (): void => {};
@@ -29,11 +29,13 @@ const { activate, deactivate } = defineExtension(async (context) => {
   // init watcher
   const watcher = workspace.createFileSystemWatcher('**/.vscode/folder-desc.json');
   watcher.onDidChange(async (uri) => {
-    const config = readConfig(uri.path);
+    const config = transformerConfig(uri.path, readConfig(uri.path));
 
     allDecs = { ...allDecs, ...config };
 
     for (const url in config) {
+      console.warn(37, url, uri.path);
+
       const u = vscodeUri.file(url);
       changeEmitter.fire(u);
     }
@@ -80,7 +82,7 @@ async function readAllDecs() {
   })).then(files => files.flat());
 
   const allConfigs: DescData = allConfigFiles.reduce((acc, filePath) => {
-    const config = readConfig(filePath);
+    const config = transformerConfig(filePath, readConfig(filePath));
     return { ...acc, ...config };
   }, {} as DescData);
 

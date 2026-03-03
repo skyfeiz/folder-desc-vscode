@@ -17,10 +17,10 @@ Add description to the folder or file in VSCode.
 ```json
 // .vscode/folder-desc.json
 {
-  "/Users/jayz/Documents/test/aaa": {
+  "aaa": {
     "description": "aaa"
   },
-  "/Users/jayz/Documents/test/aaa/index.ts": {
+  "aaa/index.ts": {
     "description": "aaa-index.ts",
     "tooltip": "tooltip-index.ts"
   }
