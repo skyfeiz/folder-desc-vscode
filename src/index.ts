@@ -29,13 +29,11 @@ const { activate, deactivate } = defineExtension(async (context) => {
   // init watcher
   const watcher = workspace.createFileSystemWatcher('**/.vscode/folder-desc.json');
   watcher.onDidChange(async (uri) => {
-    const config = transformerConfig(uri.path, readConfig(uri.path));
+    const config = transformerConfig(uri.fsPath, readConfig(uri.fsPath));
 
     allDecs = { ...allDecs, ...config };
 
     for (const url in config) {
-      console.warn(37, url, uri.path);
-
       const u = vscodeUri.file(url);
       changeEmitter.fire(u);
     }
@@ -50,23 +48,28 @@ const { activate, deactivate } = defineExtension(async (context) => {
 });
 
 async function actionAddDesc(uri: Uri) {
+  const uriPath = uri.fsPath;
   const rootUris = workspace.workspaceFolders?.map(folder => folder.uri.path);
 
-  const matchedPath = getMatchedPath(rootUris, uri.path);
+  const matchedPath = getMatchedPath(rootUris, uriPath);
 
-  if (uri.path === matchedPath) {
+  if (uriPath === matchedPath) {
     vscodeWindow.showInformationMessage('This is a root folder(not support to add description)');
     return;
   }
 
   const desc = await vscodeWindow.showInputBox({ prompt: 'Please enter the description', value: '' });
 
-  writeConfig(matchedPath, uri.path, desc || '');
+  // input has been canceled
+  if (desc === undefined)
+    return;
 
-  if (allDecs[uri.path]) {
-    allDecs[uri.path].description = desc || '';
+  writeConfig(matchedPath, uriPath, desc);
+
+  if (allDecs[uriPath]) {
+    allDecs[uriPath].description = desc || '';
   } else {
-    allDecs[uri.path] = { description: desc || '' };
+    allDecs[uriPath] = { description: desc || '' };
   }
 
   changeEmitter.fire(uri);
@@ -78,7 +81,7 @@ async function readAllDecs() {
     return {};
 
   const allConfigFiles: string[] = await Promise.all(rootUris.map(async (rootUri) => {
-    return fg(`${rootUri}/**/.vscode/folder-desc.json`, { onlyFiles: true });
+    return fg.async([`${rootUri}/**/.vscode/folder-desc.json`, '!**/node_modules/**'], { onlyFiles: true });
   })).then(files => files.flat());
 
   const allConfigs: DescData = allConfigFiles.reduce((acc, filePath) => {

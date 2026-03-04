@@ -46,7 +46,9 @@ export function readConfig(filePath: string): DescData {
     return {};
   }
 
-  return destr(fs.readFileSync(filePath, 'utf-8')); ;
+  const raw = destr(fs.readFileSync(filePath, 'utf-8'));
+
+  return typeof raw === 'object' ? raw as DescData : {};
 }
 
 export function writeConfig(matchedRootPath: string, path: string, desc: string) {
