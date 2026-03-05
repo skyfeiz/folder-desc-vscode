@@ -64,15 +64,14 @@ async function actionAddDesc(uri: Uri) {
   if (desc === undefined)
     return;
 
-  writeConfig(matchedPath, uriPath, desc);
-
   if (allDecs[uriPath]) {
     allDecs[uriPath].description = desc || '';
   } else {
     allDecs[uriPath] = { description: desc || '' };
   }
 
-  changeEmitter.fire(uri);
+  writeConfig(matchedPath, uriPath, desc);
+  // changeEmitter.fire(uri);
 }
 
 async function readAllDecs() {
