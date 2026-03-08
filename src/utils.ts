@@ -63,7 +63,8 @@ export function writeConfig(matchedRootPath: string, path: string, desc: string)
     descData = readConfig(filePath);
   }
 
-  path = path.replace(matchedRootPath, '').slice(1);
+  // absolute path to relative path
+  path = path.slice(matchedRootPath.length + 1);
 
   descData[path] = { description: desc };
 
@@ -74,10 +75,22 @@ export function writeConfig(matchedRootPath: string, path: string, desc: string)
  * transform the config to the absolute path
  * `allDecs` is a object, key is the absolute path
  */
-export function transformerConfig(filePath: string, config: DescData) {
+export function transformerConfig(filePath: string, config: DescData | undefined) {
+  if (!config)
+    return {};
+
   const newConfig: DescData = {};
   for (const key in config) {
     newConfig[join(filePath, '../../', key)] = config[key];
+  }
+  return newConfig;
+}
+
+export function mergeConfig(oldConfig: DescData, newConfig: DescData) {
+  for (const key in oldConfig) {
+    if (!(key in newConfig)) {
+      newConfig[key] = { description: '' };
+    }
   }
   return newConfig;
 }

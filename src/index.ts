@@ -1,14 +1,15 @@
-import type { Uri } from 'vscode';
+import type { FileSystemWatcher, Uri } from 'vscode';
 import type { DescData } from './type';
 import fg from 'fast-glob';
 import { defineExtension, useEventEmitter } from 'reactive-vscode';
 import { commands, FileDecoration, Uri as vscodeUri, window as vscodeWindow, workspace } from 'vscode';
-import { getMatchedPath, readConfig, transformerConfig, writeConfig } from './utils';
+import { getMatchedPath, mergeConfig, readConfig, transformerConfig, writeConfig } from './utils';
 
 // @ts-expect-error - support badge length greater than 2 characters
 FileDecoration.validate = (): void => {};
 
 let allDecs: DescData = {};
+const configMap: Map<string, DescData> = new Map();
 const changeEmitter = useEventEmitter<undefined | Uri | Uri[]>([]);
 
 const { activate, deactivate } = defineExtension(async (context) => {
@@ -28,16 +29,8 @@ const { activate, deactivate } = defineExtension(async (context) => {
 
   // init watcher
   const watcher = workspace.createFileSystemWatcher('**/.vscode/folder-desc.json');
-  watcher.onDidChange(async (uri) => {
-    const config = transformerConfig(uri.fsPath, readConfig(uri.fsPath));
-
-    allDecs = { ...allDecs, ...config };
-
-    for (const url in config) {
-      const u = vscodeUri.file(url);
-      changeEmitter.fire(u);
-    }
-  });
+  watcher.onDidChange(handelConfigChange);
+  watcher.onDidDelete(handelConfigChange);
 
   // register command
   const disposable = commands.registerCommand('folder-desc.addDesc', actionAddDesc);
@@ -46,6 +39,19 @@ const { activate, deactivate } = defineExtension(async (context) => {
   context.subscriptions.push(decorationProvider);
   context.subscriptions.push(disposable);
 });
+
+function handelConfigChange(uri: Uri) {
+  const newConfig = mergeConfig(configMap.get(uri.fsPath) || {}, readConfig(uri.fsPath));
+  configMap.set(uri.fsPath, newConfig);
+  const config = transformerConfig(uri.fsPath, newConfig);
+
+  allDecs = { ...allDecs, ...config };
+
+  for (const url in config) {
+    const u = vscodeUri.file(url);
+    changeEmitter.fire(u);
+  }
+}
 
 async function actionAddDesc(uri: Uri) {
   const uriPath = uri.fsPath;
@@ -71,7 +77,6 @@ async function actionAddDesc(uri: Uri) {
   }
 
   writeConfig(matchedPath, uriPath, desc);
-  // changeEmitter.fire(uri);
 }
 
 async function readAllDecs() {
@@ -84,7 +89,9 @@ async function readAllDecs() {
   })).then(files => files.flat());
 
   const allConfigs: DescData = allConfigFiles.reduce((acc, filePath) => {
-    const config = transformerConfig(filePath, readConfig(filePath));
+    const tempConfig = readConfig(filePath);
+    configMap.set(filePath, tempConfig);
+    const config = transformerConfig(filePath, tempConfig);
     return { ...acc, ...config };
   }, {} as DescData);
 
