@@ -1,4 +1,4 @@
-import type { FileSystemWatcher, Uri } from 'vscode';
+import type { Uri } from 'vscode';
 import type { DescData } from './type';
 import fg from 'fast-glob';
 import { defineExtension, useEventEmitter } from 'reactive-vscode';
