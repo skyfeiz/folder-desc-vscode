@@ -42,8 +42,6 @@ const { activate, deactivate } = defineExtension(async (context) => {
 });
 
 function handelConfigChange(uri: Uri) {
-  console.warn(44, uri);
-
   const newConfig = mergeConfig(configMap.get(uri.fsPath) || {}, readConfig(uri.fsPath));
   configMap.set(uri.fsPath, newConfig);
   const config = transformerConfig(uri.fsPath, newConfig);

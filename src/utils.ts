@@ -1,6 +1,5 @@
 import type { DescData } from './type';
 import fs from 'node:fs';
-import { destr } from 'destr';
 import { join } from 'pathe';
 
 function checkFileExists(filePath: string) {
@@ -46,9 +45,15 @@ export function readConfig(filePath: string): DescData {
     return {};
   }
 
-  const raw = destr(fs.readFileSync(filePath, 'utf-8'));
+  const content = fs.readFileSync(filePath, 'utf-8');
 
-  return typeof raw === 'object' ? raw as DescData : {};
+  try {
+    const parsed = JSON.parse(content);
+    return typeof parsed === 'object' ? parsed as DescData : {};
+  } catch (parseErr) {
+    console.error(`[folder-desc] Invalid JSON in config file: ${filePath}`, parseErr);
+    return {};
+  }
 }
 
 export function writeConfig(matchedRootPath: string, path: string, desc: string) {
